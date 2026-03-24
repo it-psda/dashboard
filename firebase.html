@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Presensi UPT PSDA - Dashboard Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.0/lucide.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .sidebar-item:hover { background: rgba(59, 130, 246, 0.1); }
+        .sidebar-item.active { background: #3b82f6 !important; color: white !important; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+    <div id="app" class="flex min-h-screen">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-white border-r border-slate-200 hidden md:flex flex-col fixed h-full">
+            <div class="p-6 border-b border-slate-100 flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white">
+                    <i data-lucide="shield-check"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-slate-800 text-sm leading-tight">UPT PSDA</h1>
+                    <p class="text-xs text-slate-500">Dashboard Admin</p>
+                </div>
+            </div>
+            
+            <nav class="flex-1 p-4 space-y-2">
+                <button onclick="changeTab('overview')" class="tab-btn active sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-blue-600 bg-blue-50" data-tab="overview">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                    <span class="font-medium">Ringkasan</span>
+                </button>
+                <button onclick="changeTab('attendance')" class="tab-btn sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-600" data-tab="attendance">
+                    <i data-lucide="clipboard-check" class="w-5 h-5"></i>
+                    <span class="font-medium">Data Presensi</span>
+                </button>
+                <button onclick="changeTab('employees')" class="tab-btn sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-600" data-tab="employees">
+                    <i data-lucide="users" class="w-5 h-5"></i>
+                    <span class="font-medium">Data Pegawai</span>
+                </button>
+                <button onclick="changeTab('agenda')" class="tab-btn sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-600" data-tab="agenda">
+                    <i data-lucide="calendar" class="w-5 h-5"></i>
+                    <span class="font-medium">Agenda & Kegiatan</span>
+                </button>
+            </nav>
+
+            <div class="p-4 border-t border-slate-100">
+                <div id="user-info" class="flex items-center gap-3 p-2">
+                    <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold" id="user-initials">?</div>
+                    <div class="overflow-hidden">
+                        <p class="text-xs font-semibold text-slate-800 truncate" id="user-name">Memuat...</p>
+                        <p class="text-[10px] text-slate-500 truncate" id="user-id">Mengecek auth...</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col min-w-0 ml-64">
+            <!-- Header -->
+            <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 sticky top-0 z-10">
+                <h2 id="current-tab-title" class="text-lg font-bold text-slate-800">Dashboard Ringkasan</h2>
+                <div class="flex items-center gap-4">
+                    <span id="connection-status" class="px-3 py-1 bg-amber-100 text-amber-700 text-xs rounded-full font-medium flex items-center gap-2">
+                        <span class="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></span>
+                        Menghubungkan ke Firebase...
+                    </span>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div id="content" class="p-8">
+                <!-- Overview Section -->
+                <div id="overview-section" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="p-2 bg-blue-50 text-blue-600 rounded-lg"><i data-lucide="users"></i></div>
+                                <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">Total</span>
+                            </div>
+                            <h3 class="text-slate-500 text-sm font-medium">Total Pegawai</h3>
+                            <p class="text-2xl font-bold text-slate-800" id="stat-total-pegawai">0</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="p-2 bg-emerald-50 text-emerald-600 rounded-lg"><i data-lucide="check-circle"></i></div>
+                                <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded">Hari Ini</span>
+                            </div>
+                            <h3 class="text-slate-500 text-sm font-medium">Hadir</h3>
+                            <p class="text-2xl font-bold text-slate-800" id="stat-hadir">0</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="p-2 bg-rose-50 text-rose-600 rounded-lg"><i data-lucide="x-circle"></i></div>
+                                <span class="text-xs font-bold text-rose-600 bg-rose-50 px-2 py-1 rounded">Hari Ini</span>
+                            </div>
+                            <h3 class="text-slate-500 text-sm font-medium">Alpha/Izin</h3>
+                            <p class="text-2xl font-bold text-slate-800" id="stat-alpha">0</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="p-2 bg-amber-50 text-amber-600 rounded-lg"><i data-lucide="calendar"></i></div>
+                                <span class="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded">Event</span>
+                            </div>
+                            <h3 class="text-slate-500 text-sm font-medium">Agenda Mendatang</h3>
+                            <p class="text-2xl font-bold text-slate-800" id="stat-agenda">0</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+                            <h3 class="font-bold text-slate-800">Aktifitas Presensi Terbaru</h3>
+                            <button class="text-blue-600 text-sm font-semibold hover:underline" onclick="changeTab('attendance')">Lihat Semua</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
+                                    <tr>
+                                        <th class="px-6 py-4 font-semibold">Pegawai</th>
+                                        <th class="px-6 py-4 font-semibold">Waktu</th>
+                                        <th class="px-6 py-4 font-semibold">Status</th>
+                                        <th class="px-6 py-4 font-semibold">Lokasi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recent-attendance-list" class="divide-y divide-slate-100">
+                                    <tr>
+                                        <td colspan="4" class="px-6 py-12 text-center text-slate-400">
+                                            <div class="flex flex-col items-center gap-2">
+                                                <i data-lucide="inbox" class="w-8 h-8 opacity-20"></i>
+                                                <p>Menunggu data dari Firebase...</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dynamic Section -->
+                <div id="dynamic-section" class="hidden"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global State for Firebase
+        window.firebaseDB = null;
+        window.firebaseAuth = null;
+        window.currentUser = null;
+        
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'upt-psda-attendance';
+
+        async function initFirebase() {
+            const status = document.getElementById('connection-status');
+            try {
+                // Check if config exists
+                if (typeof __firebase_config === 'undefined' || !__firebase_config) {
+                    console.warn("Firebase configuration not found. Entering Preview Mode.");
+                    status.innerHTML = `<span class="w-2 h-2 bg-blue-500 rounded-full"></span> Mode Pratinjau (Tanpa Database)`;
+                    status.className = "px-3 py-1 bg-blue-50 text-blue-700 text-xs rounded-full font-medium flex items-center gap-2";
+                    
+                    // Setup demo data UI
+                    setupDemoUI();
+                    return;
+                }
+
+                const firebaseConfig = JSON.parse(__firebase_config);
+                const app = initializeApp(firebaseConfig);
+                window.firebaseAuth = getAuth(app);
+                window.firebaseDB = getFirestore(app);
+
+                // Auth process
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(window.firebaseAuth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(window.firebaseAuth);
+                }
+
+                onAuthStateChanged(window.firebaseAuth, (u) => {
+                    window.currentUser = u;
+                    if (u) {
+                        updateAuthUI(u);
+                        startDataListeners();
+                    }
+                });
+
+            } catch (error) {
+                console.error("Init Error:", error);
+                status.innerHTML = `<span class="w-2 h-2 bg-red-500 rounded-full"></span> Error: ${error.message}`;
+                status.className = "px-3 py-1 bg-red-100 text-red-700 text-xs rounded-full font-medium flex items-center gap-2";
+            }
+        }
+
+        function setupDemoUI() {
+            document.getElementById('user-name').textContent = "Demo Admin";
+            document.getElementById('user-id').textContent = "demo-mode-active";
+            document.getElementById('user-initials').textContent = "DA";
+            
+            // Fill with placeholder values so UI doesn't look empty
+            document.getElementById('stat-total-pegawai').textContent = "0";
+            document.getElementById('stat-hadir').textContent = "0";
+            document.getElementById('stat-alpha').textContent = "0";
+            document.getElementById('stat-agenda').textContent = "0";
+        }
+
+        function updateAuthUI(u) {
+            document.getElementById('user-name').textContent = "Administrator";
+            document.getElementById('user-id').textContent = u.uid.substring(0, 8) + "...";
+            document.getElementById('user-initials').textContent = "AD";
+            
+            const status = document.getElementById('connection-status');
+            status.innerHTML = `<span class="w-2 h-2 bg-emerald-500 rounded-full"></span> Online`;
+            status.className = "px-3 py-1 bg-emerald-100 text-emerald-700 text-xs rounded-full font-medium flex items-center gap-2";
+        }
+
+        function startDataListeners() {
+            const db = window.firebaseDB;
+            if (!db) return;
+            
+            // Pegawai Count
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'pegawai'), (snap) => {
+                document.getElementById('stat-total-pegawai').textContent = snap.size;
+            }, (err) => console.error("Pegawai Error:", err));
+
+            // Attendance Logs
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'presensi'), (snap) => {
+                const logs = [];
+                snap.forEach(doc => logs.push(doc.data()));
+                
+                const today = new Date().toISOString().split('T')[0];
+                const todayLogs = logs.filter(l => l.Timestamp && l.Timestamp.startsWith(today));
+                document.getElementById('stat-hadir').textContent = todayLogs.length;
+                
+                renderTable(logs.slice(-5).reverse());
+            }, (err) => console.error("Presensi Error:", err));
+        }
+
+        function renderTable(data) {
+            const list = document.getElementById('recent-attendance-list');
+            if (data.length === 0) {
+                list.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-slate-400">Belum ada data di database.</td></tr>`;
+                return;
+            }
+
+            list.innerHTML = data.map(item => `
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold">
+                                ${item.Nama ? item.Nama.substring(0, 2).toUpperCase() : '??'}
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-slate-800">${item.Nama || 'N/A'}</p>
+                                <p class="text-[10px] text-slate-500">${item.ID_User || '-'}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-slate-600">
+                        ${item.Timestamp ? new Date(item.Timestamp).toLocaleTimeString('id-ID') : '-'}
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 rounded-md text-[10px] font-bold uppercase ${getStatusClass(item.Status)}">
+                            ${item.Status || 'Hadir'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-slate-600 truncate max-w-[150px]">
+                        ${item.Keterangan || 'Lokasi Terdaftar'}
+                    </td>
+                </tr>
+            `).join('');
+            
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function getStatusClass(s) {
+            const status = s?.toLowerCase();
+            if (status === 'hadir') return 'bg-emerald-100 text-emerald-700';
+            if (status === 'izin' || status === 'sakit') return 'bg-amber-100 text-amber-700';
+            return 'bg-slate-100 text-slate-600';
+        }
+
+        // Start Firebase
+        initFirebase();
+    </script>
+
+    <script>
+        // Tab Management - Defined outside module to be globally accessible
+        function changeTab(tabId) {
+            const overview = document.getElementById('overview-section');
+            const dynamic = document.getElementById('dynamic-section');
+            const title = document.getElementById('current-tab-title');
+            
+            // Sidebar UI update
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active', 'bg-blue-600', 'text-white', 'bg-blue-50', 'text-blue-600');
+                btn.classList.add('text-slate-600');
+            });
+
+            const activeBtn = document.querySelector(`[data-tab="${tabId}"]`);
+            if (activeBtn) {
+                if (tabId === 'overview') {
+                    activeBtn.classList.add('active', 'bg-blue-50', 'text-blue-600');
+                } else {
+                    activeBtn.classList.add('active', 'bg-blue-600', 'text-white');
+                }
+                activeBtn.classList.remove('text-slate-600');
+            }
+
+            // Section Toggle
+            if (tabId === 'overview') {
+                overview.classList.remove('hidden');
+                dynamic.classList.add('hidden');
+                title.textContent = 'Dashboard Ringkasan';
+            } else {
+                overview.classList.add('hidden');
+                dynamic.classList.remove('hidden');
+                
+                const labels = { attendance: 'Manajemen Presensi', employees: 'Database Pegawai', agenda: 'Agenda & Kegiatan' };
+                title.textContent = labels[tabId];
+                
+                dynamic.innerHTML = `
+                    <div class="bg-white p-20 rounded-2xl border border-slate-200 text-center flex flex-col items-center gap-4">
+                        <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-300">
+                             <i data-lucide="construction" class="w-8 h-8"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-xl">Modul ${labels[tabId]}</h3>
+                            <p class="text-slate-500">Fitur sedang dalam pengembangan untuk integrasi penuh.</p>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            if (window.lucide) lucide.createIcons();
+        }
+
+        // Initial Icon Load
+        window.addEventListener('DOMContentLoaded', () => {
+            if (window.lucide) lucide.createIcons();
+        });
+    </script>
+</body>
+</html>
