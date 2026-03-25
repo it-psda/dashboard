@@ -36,6 +36,11 @@
         
         .nav-btn.active { background: #eff6ff; color: #2563eb; }
         .page { animation: fadeIn 0.3s ease-in-out; }
+
+        @keyframes loading {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(200%); }
+        }
     </style>
 </head>
 <body class="overflow-x-hidden">
@@ -43,12 +48,16 @@
     <!-- Splash Screen -->
     <div id="splash" class="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center transition-opacity duration-500">
         <img src="https://lh3.googleusercontent.com/d/1jMrmCABKhr0PWxsEap_Y8zO0WV7kUXOx" class="w-20 h-20 mb-4 animate-bounce">
-        <p class="text-slate-400 font-bold tracking-widest text-[10px] uppercase">Connecting to UPT PSDA Cloud...</p>
+        <div class="flex flex-col items-center">
+            <p class="text-slate-400 font-bold tracking-widest text-[10px] uppercase">UPT PSDA Cloud System</p>
+            <div class="w-32 h-1 bg-slate-100 rounded-full mt-2 overflow-hidden">
+                <div class="w-full h-full bg-blue-600 animate-[loading_1.5s_infinite]"></div>
+            </div>
+        </div>
     </div>
 
     <!-- UI Autentikasi -->
     <div id="page-auth" class="hidden fixed inset-0 z-[500] flex items-center justify-center p-4 bg-slate-50 overflow-y-auto">
-        
         <!-- Login Card -->
         <div id="card-login" class="auth-card active bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100">
             <div class="text-center mb-8">
@@ -56,17 +65,14 @@
                 <h2 class="text-2xl font-bold text-slate-900">UPT PSDA Login</h2>
                 <p class="text-slate-500 text-sm mt-1">Gunakan ID Pegawai & Password</p>
             </div>
-            
             <div class="space-y-4">
                 <div class="input-group"><i data-lucide="user"></i><input type="text" id="login-id" placeholder="ID Pegawai (Contoh: PSDA-...)"></div>
                 <div class="input-group"><i data-lucide="lock"></i><input type="password" id="login-pass" placeholder="Password"></div>
-                
-                <button id="btn-login" onclick="handleLogin()" class="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition-all flex items-center justify-center gap-2">
+                <button id="btn-login" class="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition-all flex items-center justify-center gap-2">
                     <i data-lucide="log-in" class="w-4 h-4"></i> Masuk Sekarang
                 </button>
-                
                 <p class="text-center text-slate-500 text-sm mt-6">
-                    Belum punya akun? <button onclick="switchAuth('register')" class="text-blue-600 font-bold underline underline-offset-4">Daftar Pegawai</button>
+                    Belum punya akun? <button id="to-register" class="text-blue-600 font-bold underline underline-offset-4">Daftar Pegawai</button>
                 </p>
             </div>
         </div>
@@ -88,44 +94,31 @@
                             <img id="photo-preview" class="w-full h-full object-cover">
                         </div>
                     </label>
-                    <input type="file" id="photo-input" class="hidden" accept="image/*" onchange="previewPhoto(event)">
+                    <input type="file" id="photo-input" class="hidden" accept="image/*">
                 </div>
             </div>
-            
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4">
-                <div class="input-group"><i data-lucide="user"></i><input type="text" id="reg-name" placeholder="Nama Lengkap" onkeyup="genID()"></div>
+                <div class="input-group"><i data-lucide="user"></i><input type="text" id="reg-name" placeholder="Nama Lengkap"></div>
                 <div class="input-group"><i data-lucide="fingerprint"></i><input type="text" id="reg-id-auto" placeholder="ID Pegawai" disabled class="bg-blue-50 font-mono text-blue-600 font-bold"></div>
-                
                 <div class="input-group"><i data-lucide="briefcase"></i>
                     <select id="reg-jabatan">
                         <option value="" disabled selected>Pilih Jabatan</option>
-                        <option>Pekarya</option>
-                        <option>PPA</option>
-                        <option>Korlap</option>
-                        <option>Staf Pengamat</option>
-                        <option>Admin</option>
+                        <option>Pekarya</option><option>PPA</option><option>Korlap</option><option>Staf Pengamat</option><option>Admin</option>
                     </select>
                 </div>
-                
                 <div class="input-group"><i data-lucide="users"></i>
                     <select id="reg-tipe">
-                        <option>Tenaga Kontrak</option>
-                        <option>PPPK</option>
-                        <option>PNS</option>
+                        <option>Tenaga Kontrak</option><option>PPPK</option><option>PNS</option>
                     </select>
                 </div>
-
                 <div class="input-group"><i data-lucide="lock"></i><input type="password" id="reg-pass" placeholder="Password Akun"></div>
                 <div class="input-group"><i data-lucide="phone"></i><input type="tel" id="reg-hp" placeholder="No WhatsApp"></div>
-                
-                <div class="input-group"><i data-lucide="map"></i><input type="text" id="reg-wilayah" placeholder="Wilayah (Contoh: Kediri)"></div>
+                <div class="input-group"><i data-lucide="map"></i><input type="text" id="reg-wilayah" placeholder="Wilayah"></div>
                 <div class="input-group"><i data-lucide="droplet"></i><input type="text" id="reg-di" placeholder="Nama DI"></div>
-                
                 <div class="input-group md:col-span-2"><i data-lucide="map-pin"></i><input type="text" id="reg-lokasi" placeholder="Lokasi Penugasan Spesifik"></div>
             </div>
-
-            <button id="btn-reg" onclick="handleRegister()" class="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold shadow-lg mt-4 hover:bg-blue-700 transition-all">Simpan & Aktifkan Cloud</button>
-            <button onclick="switchAuth('login')" class="w-full text-slate-400 font-bold mt-4 text-xs uppercase tracking-widest hover:text-blue-600">Batal & Kembali Login</button>
+            <button id="btn-reg" class="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold shadow-lg mt-4 hover:bg-blue-700 transition-all">Simpan & Aktifkan Cloud</button>
+            <button id="to-login" class="w-full text-slate-400 font-bold mt-4 text-xs uppercase tracking-widest hover:text-blue-600">Batal & Kembali Login</button>
         </div>
     </div>
 
@@ -137,20 +130,12 @@
                     <img src="https://lh3.googleusercontent.com/d/1jMrmCABKhr0PWxsEap_Y8zO0WV7kUXOx" class="w-9 h-9">
                     <span class="font-black text-xl tracking-tighter uppercase text-blue-700">UPT PSDA</span>
                 </div>
-                <button onclick="toggleSidebar()" class="lg:hidden p-2 text-slate-400">
-                    <i data-lucide="x" class="w-6 h-6"></i>
-                </button>
+                <button id="close-sidebar" class="lg:hidden p-2 text-slate-400"><i data-lucide="x"></i></button>
             </div>
-            
             <nav class="flex-1 space-y-2">
-                <button onclick="nav('home')" id="nav-home" class="nav-btn w-full flex items-center gap-3 p-3.5 rounded-xl font-bold transition-all active">
-                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
-                </button>
-                <button onclick="nav('admin')" id="nav-admin" class="nav-btn w-full flex items-center gap-3 p-3.5 text-slate-500 hover:bg-slate-50 rounded-xl transition-all">
-                    <i data-lucide="users" class="w-5 h-5"></i> Database Pegawai
-                </button>
+                <button id="nav-home-btn" class="nav-btn w-full flex items-center gap-3 p-3.5 rounded-xl font-bold transition-all active"><i data-lucide="layout-dashboard"></i> Dashboard</button>
+                <button id="nav-admin-btn" class="nav-btn w-full flex items-center gap-3 p-3.5 text-slate-500 hover:bg-slate-50 rounded-xl transition-all"><i data-lucide="users"></i> Database Pegawai</button>
             </nav>
-
             <div class="mt-auto p-4 bg-slate-50 rounded-2xl flex items-center gap-3 border border-slate-100">
                 <div id="side-avatar-container" class="w-10 h-10 bg-blue-600 rounded-xl overflow-hidden flex items-center justify-center text-white font-bold shrink-0">
                     <img id="side-avatar-img" class="w-full h-full object-cover hidden">
@@ -163,364 +148,214 @@
                         <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Connected</p>
                     </div>
                 </div>
-                <button onclick="location.reload()" class="text-slate-300 hover:text-red-500 transition-colors">
-                    <i data-lucide="log-out" class="w-4 h-4"></i>
-                </button>
+                <button onclick="location.reload()" class="text-slate-300 hover:text-red-500"><i data-lucide="log-out" class="w-4 h-4"></i></button>
             </div>
         </aside>
 
         <main class="main-wrapper min-h-screen">
             <header class="p-4 lg:px-10 flex justify-between items-center bg-white/80 backdrop-blur-md sticky top-0 z-40 border-b border-slate-100">
                 <div class="flex items-center gap-3">
-                    <button onclick="toggleSidebar()" class="lg:hidden p-2 bg-slate-50 rounded-lg">
-                        <i data-lucide="menu" class="w-5 h-5"></i>
-                    </button>
+                    <button id="open-sidebar" class="lg:hidden p-2 bg-slate-50 rounded-lg"><i data-lucide="menu"></i></button>
                     <h2 class="text-lg font-bold text-slate-800" id="top-user-name">Memuat...</h2>
                 </div>
-                <div class="flex items-center gap-4">
-                    <div class="text-right hidden sm:block">
-                        <p class="text-[9px] font-bold text-blue-600 uppercase tracking-widest">Smart Database</p>
-                        <p class="text-[10px] text-green-600 font-bold">Cloud Sync Active</p>
-                    </div>
-                    <button class="w-10 h-10 bg-white border border-slate-100 rounded-xl flex items-center justify-center shadow-sm">
-                        <i data-lucide="bell" class="w-4 h-4 text-slate-400"></i>
-                    </button>
-                </div>
             </header>
-
             <div class="p-6 lg:p-10 max-w-7xl mx-auto">
-                <!-- Dashboard Section -->
                 <section id="page-home" class="page space-y-6">
                     <div class="bg-gradient-to-br from-blue-700 to-indigo-800 rounded-[2.5rem] p-8 md:p-14 text-white shadow-2xl relative overflow-hidden">
                         <div class="relative z-10">
-                            <span class="bg-white/20 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest mb-6 inline-block backdrop-blur-sm">v1.2.0 - Stable</span>
                             <h2 class="text-3xl md:text-5xl font-black mb-4 leading-tight">Digitalisasi<br>UPT PSDA Cloud</h2>
-                            <p class="text-blue-100 mb-8 opacity-80 max-w-md text-sm md:text-base leading-relaxed">Manajemen database terintegrasi Firebase & Google Sheets untuk efisiensi birokrasi.</p>
-                            <div class="flex flex-wrap gap-4">
-                                <button onclick="nav('admin')" class="bg-white text-blue-700 px-8 py-3 rounded-xl font-extrabold shadow-xl text-sm hover:scale-105 transition-transform">Buka Database</button>
-                            </div>
+                            <button id="btn-goto-db" class="bg-white text-blue-700 px-8 py-3 rounded-xl font-extrabold shadow-xl text-sm">Buka Database</button>
                         </div>
-                        <i data-lucide="cloud" class="absolute -right-10 -bottom-10 w-64 h-64 text-white/10 -rotate-12"></i>
                     </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex items-center gap-4">
-                            <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 shadow-inner">
-                                <i data-lucide="users" class="w-7 h-7"></i>
-                            </div>
-                            <div>
-                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Pegawai</p>
-                                <h4 class="text-3xl font-black text-slate-800" id="stat-total">0</h4>
-                            </div>
-                        </div>
-                        <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex items-center gap-4">
-                            <div class="w-14 h-14 bg-green-50 rounded-2xl flex items-center justify-center text-green-600 shadow-inner">
-                                <i data-lucide="shield-check" class="w-7 h-7"></i>
-                            </div>
-                            <div>
-                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">System Status</p>
-                                <h4 class="text-lg font-black text-slate-800">Verified</h4>
-                            </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white p-6 rounded-[2rem] border border-slate-100 flex items-center gap-4">
+                            <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600"><i data-lucide="users" class="w-7 h-7"></i></div>
+                            <div><p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Pegawai</p><h4 class="text-3xl font-black text-slate-800" id="stat-total">0</h4></div>
                         </div>
                     </div>
                 </section>
-
-                <!-- Database Section -->
                 <section id="page-admin" class="page hidden">
-                    <div class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
-                        <div>
-                            <h3 class="text-3xl font-black text-slate-800">Database Pegawai</h3>
-                            <p class="text-slate-400 text-sm mt-1">Daftar personel aktif UPT PSDA.</p>
-                        </div>
-                        <div class="bg-blue-600 px-6 py-2 rounded-xl text-white font-bold text-xs shadow-lg shadow-blue-100" id="count-label">
-                            Memuat...
-                        </div>
-                    </div>
-                    
-                    <div id="user-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
-                        <div class="col-span-full py-20 text-center flex flex-col items-center">
-                            <div class="w-12 h-12 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin mb-4"></div>
-                            <p class="text-slate-400 font-medium">Mengsinkronkan database cloud...</p>
-                        </div>
-                    </div>
+                    <div id="user-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20"></div>
                 </section>
             </div>
         </main>
     </div>
 
-    <!-- Firebase SDK & App Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
-        let db, auth;
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'upt-psda-smart';
+        const firebaseConfig = {
+            apiKey: "AIzaSyD5MSJbJuFDwak9k561h7nzPGcsskHE7_s",
+            authDomain: "database-engine-upt-psda.firebaseapp.com",
+            projectId: "database-engine-upt-psda",
+            storageBucket: "database-engine-upt-psda.firebasestorage.app",
+            messagingSenderId: "98861981068",
+            appId: "1:98861981068:web:767f249c35a0dae4d2caa9",
+            measurementId: "G-YYVH7RE5MN",
+            databaseURL: "https://database-engine-upt-psda-default-rtdb.asia-southeast1.firebasedatabase.app"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const rtdb = getDatabase(app);
+        const appId = 'upt-psda-smart';
+        
         let selectedPhotoBase64 = null;
 
-        // --- Core Init ---
-        async function init() {
-            try {
-                const config = JSON.parse(__firebase_config);
-                const app = initializeApp(config);
-                auth = getAuth(app);
-                db = getFirestore(app);
-
-                // Auth Process
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        checkSession(user.uid);
-                    } else {
-                        showAuth();
-                        hideSplash();
-                    }
-                });
-            } catch (err) {
-                console.error("Init Error:", err);
-                showAuth();
-                hideSplash();
-            }
-        }
-
-        async function checkSession(uid) {
-            try {
-                // Check in private user profile first
-                const ref = doc(db, 'artifacts', appId, 'users', uid, 'profile', 'data');
-                const snap = await getDoc(ref);
-                if (snap.exists()) {
-                    window.userData = snap.data();
-                    showApp(window.userData);
-                } else {
-                    showAuth();
-                }
-            } catch (e) {
-                showAuth();
-            } finally {
-                hideSplash();
-            }
-        }
-
-        // --- Auth Handlers ---
-        window.handleLogin = async () => {
-            const id = document.getElementById('login-id').value;
-            const pass = document.getElementById('login-pass').value;
-            const btn = document.getElementById('btn-login');
-
-            if (!id || !pass) return alert("Masukkan ID dan Password!");
-            
-            btn.disabled = true;
-            btn.innerHTML = '<div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> Mengecek...';
-
-            try {
-                // Query Rule 2: Fetch all then filter in memory for simplicity/no index
-                const q = collection(db, 'artifacts', appId, 'public', 'data', 'all_users');
-                onSnapshot(q, (snap) => {
-                    let userFound = null;
-                    snap.forEach(d => {
-                        const data = d.data();
-                        if (data.ID_User === id && data.Password === pass) userFound = data;
-                    });
-
-                    if (userFound) {
-                        window.userData = userFound;
-                        showApp(userFound);
-                    } else {
-                        alert("ID atau Password salah!");
-                        btn.disabled = false;
-                        btn.innerText = "Masuk Sekarang";
-                    }
-                }, (err) => {
-                    alert("Koneksi gagal: " + err.message);
-                    btn.disabled = false;
-                });
-            } catch (e) {
-                alert("Error: " + e.message);
-                btn.disabled = false;
-            }
-        };
-
-        window.handleRegister = async () => {
-            if (!auth?.currentUser) return alert("Sistem belum siap, tunggu sebentar.");
-            
-            const name = document.getElementById('reg-name').value;
-            const id = document.getElementById('reg-id-auto').value;
-            const pass = document.getElementById('reg-pass').value;
-            const btn = document.getElementById('btn-reg');
-
-            if (!name || !pass) return alert("Nama dan Password wajib diisi!");
-
-            btn.disabled = true;
-            btn.innerText = "Mendaftarkan ke Cloud...";
-
-            const uid = auth.currentUser.uid;
-            const payload = {
-                uid: uid,
-                ID_User: id,
-                Nama_Lengkap: name,
-                Jabatan: document.getElementById('reg-jabatan').value || "Pegawai",
-                Tipe_Pegawai: document.getElementById('reg-tipe').value,
-                Password: pass,
-                No_HP: document.getElementById('reg-hp').value || "-",
-                Wilayah: document.getElementById('reg-wilayah').value || "Pusat",
-                DI: document.getElementById('reg-di').value || "-",
-                Lokasi_Penempatan: document.getElementById('reg-lokasi').value || "-",
-                Foto_Profile: selectedPhotoBase64,
-                CreatedAt: new Date().toISOString()
-            };
-
-            try {
-                // Save Private & Public
-                await setDoc(doc(db, 'artifacts', appId, 'users', uid, 'profile', 'data'), payload);
-                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'all_users', uid), payload);
-                
-                window.userData = payload;
-                showApp(payload);
-            } catch (e) {
-                alert("Gagal: " + e.message);
-                btn.disabled = false;
-                btn.innerText = "Simpan & Aktifkan Cloud";
-            }
-        };
-
-        window.loadDatabase = () => {
-            const q = collection(db, 'artifacts', appId, 'public', 'data', 'all_users');
-            onSnapshot(q, (snap) => {
-                const list = [];
-                snap.forEach(d => list.push(d.data()));
-                renderUserList(list);
-            }, (err) => console.error("Snapshot Error:", err));
-        };
-
-        init();
-    </script>
-
-    <script>
-        // --- UI Utilities ---
-        function hideSplash() {
+        // UI Utility Functions (Didefinisikan di dalam modul agar bisa diakses langsung)
+        const hideSplash = () => {
             const s = document.getElementById('splash');
             if(s) { s.style.opacity = '0'; setTimeout(() => s.style.display = 'none', 500); }
-        }
+        };
 
-        function showAuth() {
+        const showAuth = () => {
             document.getElementById('page-auth').classList.remove('hidden');
             document.getElementById('app-main').classList.add('hidden');
             lucide.createIcons();
-        }
+        };
 
-        function showApp(data) {
+        const showApp = (data) => {
             document.getElementById('page-auth').classList.add('hidden');
             document.getElementById('app-main').classList.remove('hidden');
-            
             document.getElementById('top-user-name').innerText = `Halo, ${data.Nama_Lengkap.split(' ')[0]}!`;
             document.getElementById('side-user-name').innerText = data.Nama_Lengkap;
             
             const avatarImg = document.getElementById('side-avatar-img');
             const avatarTxt = document.getElementById('side-avatar-text');
-            
-            if(data.Foto_Profile) {
-                avatarImg.src = data.Foto_Profile;
+            if(data.Foto_Profil) {
+                avatarImg.src = data.Foto_Profil;
                 avatarImg.classList.remove('hidden');
                 avatarTxt.classList.add('hidden');
             } else {
                 avatarTxt.innerText = data.Nama_Lengkap.charAt(0);
-                avatarImg.classList.add('hidden');
                 avatarTxt.classList.remove('hidden');
             }
-
-            window.loadDatabase();
+            loadDatabase();
             lucide.createIcons();
-        }
-
-        window.previewPhoto = (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            if (file.size > 800000) return alert("Ukuran foto maksimal 800KB!");
-
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                selectedPhotoBase64 = event.target.result;
-                document.getElementById('photo-preview').src = selectedPhotoBase64;
-                document.getElementById('photo-preview-container').classList.remove('hidden');
-                document.getElementById('photo-placeholder').classList.add('hidden');
-            };
-            reader.readAsDataURL(file);
         };
 
-        function switchAuth(card) {
-            document.querySelectorAll('.auth-card').forEach(c => c.classList.remove('active'));
-            document.getElementById('card-' + card).classList.add('active');
-            lucide.createIcons();
-        }
+        const loadDatabase = () => {
+            const q = collection(db, 'artifacts', appId, 'public', 'data', 'all_users');
+            onSnapshot(q, (snap) => {
+                const list = [];
+                snap.forEach(d => list.push(d.data()));
+                renderUserList(list);
+            });
+        };
 
-        function genID() {
-            const name = document.getElementById('reg-name').value;
-            if(name.length > 2) {
-                const initial = name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0,3);
-                const id = `PSDA-${initial}-${Math.floor(1000 + Math.random() * 9000)}`;
-                document.getElementById('reg-id-auto').value = id;
-            }
-        }
-
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('open');
-        }
-
-        function nav(p) {
-            document.querySelectorAll('.page').forEach(s => s.classList.add('hidden'));
-            document.getElementById('page-' + p).classList.remove('hidden');
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active', 'bg-blue-50', 'text-blue-600'));
-            document.getElementById('nav-' + p).classList.add('active', 'bg-blue-50', 'text-blue-600');
-            if (window.innerWidth < 1024) toggleSidebar();
-            lucide.createIcons();
-        }
-
-        function renderUserList(users) {
+        const renderUserList = (users) => {
             const container = document.getElementById('user-list');
             document.getElementById('stat-total').innerText = users.length;
-            document.getElementById('count-label').innerText = users.length + " Personel Terdaftar";
-            
-            if (!users.length) {
-                container.innerHTML = `<div class="col-span-full py-20 text-center text-slate-400">Belum ada pegawai terdaftar.</div>`;
-                return;
-            }
-
             container.innerHTML = users.map(u => `
-                <div class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-md transition-all">
-                    <div class="flex items-center gap-4 mb-5">
-                        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center font-black text-xl text-blue-600 overflow-hidden shrink-0">
-                            ${u.Foto_Profile ? `<img src="${u.Foto_Profile}" class="w-full h-full object-cover">` : u.Nama_Lengkap[0]}
+                <div class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center font-bold text-blue-600 overflow-hidden">
+                            ${u.Foto_Profil ? `<img src="${u.Foto_Profil}" class="w-full h-full object-cover">` : u.Nama_Lengkap[0]}
                         </div>
-                        <div class="overflow-hidden">
-                            <h4 class="font-bold truncate text-slate-800">${u.Nama_Lengkap}</h4>
-                            <p class="text-[9px] text-blue-600 font-extrabold uppercase tracking-widest">${u.Jabatan}</p>
-                        </div>
+                        <div><h4 class="font-bold text-slate-800">${u.Nama_Lengkap}</h4><p class="text-[10px] text-blue-600 font-bold uppercase">${u.Jabatan}</p></div>
                     </div>
-                    <div class="space-y-2.5 pt-4 border-t border-slate-50">
-                        <div class="flex justify-between text-[11px]">
-                            <span class="text-slate-400 font-bold uppercase">ID</span>
-                            <span class="font-mono font-bold text-blue-600">${u.ID_User}</span>
-                        </div>
-                        <div class="flex justify-between text-[11px]">
-                            <span class="text-slate-400 font-bold uppercase">Wilayah</span>
-                            <span class="font-bold text-slate-700">${u.Wilayah}</span>
-                        </div>
-                        <div class="flex justify-between text-[11px]">
-                            <span class="text-slate-400 font-bold uppercase">Penempatan</span>
-                            <span class="font-bold text-slate-700 truncate ml-4">${u.Lokasi_Penempatan}</span>
-                        </div>
+                    <div class="text-[11px] space-y-1 pt-2 border-t border-slate-50">
+                        <div class="flex justify-between"><span class="text-slate-400">ID</span><span class="font-mono font-bold">${u.ID_User}</span></div>
+                        <div class="flex justify-between"><span class="text-slate-400">Wilayah</span><span>${u.Wilayah}</span></div>
                     </div>
                 </div>
             `).join('');
             lucide.createIcons();
-        }
+        };
 
-        document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
+        // Event Listeners
+        document.getElementById('btn-login').onclick = async () => {
+            const idInput = document.getElementById('login-id').value;
+            const passInput = document.getElementById('login-pass').value;
+            if (!idInput || !passInput) return alert("Isi semua field!");
+            
+            const q = collection(db, 'artifacts', appId, 'public', 'data', 'all_users');
+            onSnapshot(q, (snap) => {
+                let userFound = null;
+                snap.forEach(d => {
+                    const data = d.data();
+                    if (data.ID_User === idInput && data.Password === passInput) userFound = data;
+                });
+                if (userFound) showApp(userFound);
+                else alert("Login Gagal!");
+            });
+        };
+
+        document.getElementById('btn-reg').onclick = async () => {
+            const name = document.getElementById('reg-name').value;
+            const pass = document.getElementById('reg-pass').value;
+            if (!name || !pass) return alert("Nama & Pass wajib!");
+            
+            const payload = {
+                uid: auth.currentUser.uid,
+                ID_User: document.getElementById('reg-id-auto').value,
+                Nama_Lengkap: name,
+                Jabatan: document.getElementById('reg-jabatan').value || "Pegawai",
+                Tipe_Pegawai: document.getElementById('reg-tipe').value,
+                Password: pass,
+                No_HP: document.getElementById('reg-hp').value,
+                Wilayah: document.getElementById('reg-wilayah').value,
+                Foto_Profil: selectedPhotoBase64,
+                CreatedAt: new Date().toISOString()
+            };
+
+            await setDoc(doc(db, 'artifacts', appId, 'users', auth.currentUser.uid, 'profile', 'data'), payload);
+            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'all_users', auth.currentUser.uid), payload);
+            await set(push(ref(rtdb, 'user_queue')), payload);
+            showApp(payload);
+        };
+
+        document.getElementById('photo-input').onchange = (e) => {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                selectedPhotoBase64 = ev.target.result;
+                document.getElementById('photo-preview').src = selectedPhotoBase64;
+                document.getElementById('photo-preview-container').classList.remove('hidden');
+                document.getElementById('photo-placeholder').classList.add('hidden');
+            };
+            reader.readAsDataURL(e.target.files[0]);
+        };
+
+        document.getElementById('reg-name').onkeyup = (e) => {
+            const val = e.target.value;
+            if(val.length > 2) {
+                const init = val.split(' ').map(n => n[0]).join('').toUpperCase().substring(0,3);
+                document.getElementById('reg-id-auto').value = `PSDA-${init}-${Math.floor(1000+Math.random()*9000)}`;
+            }
+        };
+
+        // Navigation
+        const nav = (p) => {
+            document.querySelectorAll('.page').forEach(s => s.classList.add('hidden'));
+            document.getElementById('page-' + p).classList.remove('hidden');
+            lucide.createIcons();
+        };
+
+        document.getElementById('nav-home-btn').onclick = () => nav('home');
+        document.getElementById('nav-admin-btn').onclick = () => nav('admin');
+        document.getElementById('btn-goto-db').onclick = () => nav('admin');
+        document.getElementById('to-register').onclick = () => { document.getElementById('card-login').classList.remove('active'); document.getElementById('card-register').classList.add('active'); };
+        document.getElementById('to-login').onclick = () => { document.getElementById('card-register').classList.remove('active'); document.getElementById('card-login').classList.add('active'); };
+        document.getElementById('open-sidebar').onclick = () => document.getElementById('sidebar').classList.add('open');
+        document.getElementById('close-sidebar').onclick = () => document.getElementById('sidebar').classList.remove('open');
+
+        // Init App
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const snap = await getDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data'));
+                if (snap.exists()) showApp(snap.data());
+                else showAuth();
+            } else {
+                signInAnonymously(auth);
+            }
+            hideSplash();
+        });
+
+        lucide.createIcons();
     </script>
 </body>
 </html>
