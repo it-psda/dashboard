@@ -6,13 +6,15 @@
     <title>UPT PSDA - Smart Database</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Library QR Code -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
         :root { --primary: #2563eb; --bg: #f8fafc; }
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg); color: #1e293b; margin: 0; }
         
-        .auth-card { display: none; width: 100%; max-width: 450px; }
+        .auth-card { display: none; width: 100%; max-width: 480px; }
         .auth-card.active { display: block; animation: fadeIn 0.4s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -37,6 +39,9 @@
         .page { animation: fadeIn 0.3s ease-in-out; }
 
         #toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%); z-index: 1000; display: none; }
+        
+        /* Scanner Overlay */
+        #qr-scanner-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 600; flex-direction: column; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
@@ -52,6 +57,19 @@
         <p class="text-slate-400 font-bold tracking-widest text-[10px] uppercase">UPT PSDA Cloud System</p>
     </div>
 
+    <!-- Scanner Overlay (Simulasi) -->
+    <div id="qr-scanner-overlay">
+        <div class="bg-white p-6 rounded-3xl text-center max-w-sm mx-4">
+            <div class="w-64 h-64 border-4 border-dashed border-blue-500 rounded-xl mb-4 flex items-center justify-center relative overflow-hidden">
+                <i data-lucide="qr-code" class="w-20 h-20 text-slate-200"></i>
+                <div class="absolute inset-0 bg-gradient-to-b from-transparent via-blue-500/20 to-transparent animate-bounce"></div>
+            </div>
+            <p class="font-bold text-slate-800">Arahkan QR ke Kamera</p>
+            <p class="text-xs text-slate-500 mb-6">Gunakan QR Code ID Pegawai Anda</p>
+            <button onclick="closeScanner()" class="w-full bg-slate-100 py-3 rounded-xl font-bold text-slate-600">Batalkan</button>
+        </div>
+    </div>
+
     <!-- UI Autentikasi -->
     <div id="page-auth" class="hidden fixed inset-0 z-[500] flex items-center justify-center p-4 bg-slate-50 overflow-y-auto">
         <!-- Login Card -->
@@ -59,13 +77,24 @@
             <div class="text-center mb-8">
                 <img src="https://lh3.googleusercontent.com/d/1jMrmCABKhr0PWxsEap_Y8zO0WV7kUXOx" class="w-12 h-12 mx-auto mb-4">
                 <h2 class="text-xl font-bold text-slate-900">UPT PSDA Login</h2>
-                <p class="text-slate-500 text-xs mt-1">Sistem Database Terintegrasi</p>
+                <p class="text-slate-500 text-xs mt-1">Gunakan ID, Nama, No HP, atau Email</p>
             </div>
             <div class="space-y-3">
-                <div class="input-group"><i data-lucide="user"></i><input type="text" id="login-id" placeholder="ID Pegawai (Contoh: PSDA-...)"></div>
+                <div class="input-group"><i data-lucide="user"></i><input type="text" id="login-id" placeholder="ID / Nama / No HP / Email"></div>
                 <div class="input-group"><i data-lucide="lock"></i><input type="password" id="login-pass" placeholder="Password"></div>
+                <div class="flex justify-end mb-2">
+                    <button id="to-forgot" class="text-blue-600 font-bold text-xs">Lupa Password?</button>
+                </div>
                 <button id="btn-login" class="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition-all flex items-center justify-center gap-2">
                     Masuk Sekarang
+                </button>
+                <div class="flex items-center gap-3 my-4">
+                    <hr class="flex-1 border-slate-100">
+                    <span class="text-[10px] text-slate-400 font-bold uppercase">Atau</span>
+                    <hr class="flex-1 border-slate-100">
+                </div>
+                <button onclick="openScanner()" class="w-full border border-slate-200 text-slate-600 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-slate-50">
+                    <i data-lucide="qr-code" class="w-4 h-4"></i> Login dengan QR
                 </button>
                 <p class="text-center text-slate-500 text-xs mt-6">
                     Belum terdaftar? <button id="to-register" class="text-blue-600 font-bold">Klik Daftar Pegawai</button>
@@ -73,30 +102,63 @@
             </div>
         </div>
 
+        <!-- Forgot Password Card -->
+        <div id="card-forgot" class="auth-card bg-white p-8 rounded-[2rem] shadow-xl border border-slate-100">
+            <div class="text-center mb-8">
+                <h2 class="text-xl font-bold text-slate-900">Lupa Password</h2>
+                <p class="text-slate-500 text-xs mt-1 text-balance">Masukkan Email atau No HP terdaftar untuk verifikasi</p>
+            </div>
+            <div class="space-y-4">
+                <div class="input-group"><i data-lucide="mail"></i><input type="text" id="forgot-input" placeholder="Email atau Nomor HP"></div>
+                <button id="btn-forgot-send" class="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold">Kirim Tautan Verifikasi</button>
+                <button id="back-to-login" class="w-full text-slate-400 font-bold text-[10px] uppercase">Kembali Login</button>
+            </div>
+        </div>
+
         <!-- Register Card -->
         <div id="card-register" class="auth-card bg-white p-8 rounded-[2rem] shadow-xl border border-slate-100 my-10">
             <div class="mb-6 flex justify-between items-center">
-                <h2 class="text-xl font-bold text-slate-900">Registrasi</h2>
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900">Registrasi</h2>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase">Form Data Pegawai</p>
+                </div>
                 <label class="photo-upload" for="photo-input">
                     <div id="photo-placeholder" class="text-slate-400 text-center"><i data-lucide="camera" class="w-5 h-5 mx-auto"></i></div>
                     <img id="photo-preview" class="hidden w-full h-full object-cover">
                 </label>
                 <input type="file" id="photo-input" class="hidden" accept="image/*">
             </div>
-            <div class="grid grid-cols-1 gap-2">
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div class="input-group"><i data-lucide="user"></i><input type="text" id="reg-name" placeholder="Nama Lengkap"></div>
-                <div class="input-group"><i data-lucide="fingerprint"></i><input type="text" id="reg-id-auto" placeholder="ID Otomatis" disabled class="bg-slate-50 font-mono"></div>
+                <div class="input-group"><i data-lucide="fingerprint"></i><input type="text" id="reg-id-auto" placeholder="ID Pegawai" disabled class="bg-slate-50 font-mono"></div>
+                
+                <div class="input-group md:col-span-2"><i data-lucide="map-pin"></i><input type="text" id="reg-di" placeholder="DI (Daerah Irigasi)"></div>
+                
                 <div class="input-group"><i data-lucide="briefcase"></i>
                     <select id="reg-jabatan">
-                        <option value="" disabled selected>Pilih Jabatan</option>
+                        <option value="" disabled selected>Jabatan</option>
                         <option>Pekarya</option><option>PPA</option><option>Korlap</option><option>Staf Pengamat</option><option>Admin</option>
                     </select>
                 </div>
-                <div class="input-group"><i data-lucide="lock"></i><input type="password" id="reg-pass" placeholder="Password Akun"></div>
+                <div class="input-group"><i data-lucide="layers"></i>
+                    <select id="reg-tipe">
+                        <option value="" disabled selected>Tipe Pegawai</option>
+                        <option>Kantor</option><option>Lapangan</option>
+                    </select>
+                </div>
+
                 <div class="input-group"><i data-lucide="map"></i><input type="text" id="reg-wilayah" placeholder="Wilayah"></div>
+                <div class="input-group"><i data-lucide="navigation"></i><input type="text" id="reg-penempatan" placeholder="Lokasi Penempatan"></div>
+                
+                <div class="input-group"><i data-lucide="phone"></i><input type="text" id="reg-hp" placeholder="No HP Aktif"></div>
+                <div class="input-group"><i data-lucide="mail"></i><input type="email" id="reg-email" placeholder="Alamat Email"></div>
+                
+                <div class="input-group md:col-span-2"><i data-lucide="lock"></i><input type="password" id="reg-pass" placeholder="Password Akun"></div>
             </div>
-            <button id="btn-reg" class="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold mt-4 hover:bg-blue-700">Daftar Akun</button>
-            <button id="to-login" class="w-full text-slate-400 font-bold mt-4 text-[10px] uppercase">Kembali Login</button>
+
+            <button id="btn-reg" class="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold mt-6 hover:bg-blue-700">Daftar Pegawai</button>
+            <button id="to-login-reg" class="w-full text-slate-400 font-bold mt-4 text-[10px] uppercase">Kembali Login</button>
         </div>
     </div>
 
@@ -113,6 +175,7 @@
             <nav class="flex-1 space-y-1">
                 <button id="nav-home-btn" class="nav-btn w-full flex items-center gap-3 p-3 rounded-xl font-bold active"><i data-lucide="layout"></i> Dashboard</button>
                 <button id="nav-admin-btn" class="nav-btn w-full flex items-center gap-3 p-3 text-slate-500 rounded-xl"><i data-lucide="database"></i> Database</button>
+                <button id="nav-profile-btn" class="nav-btn w-full flex items-center gap-3 p-3 text-slate-500 rounded-xl"><i data-lucide="user-circle"></i> Profil & QR</button>
             </nav>
             <div class="mt-auto p-4 bg-slate-50 rounded-xl flex items-center gap-3 border border-slate-100">
                 <div class="w-10 h-10 bg-blue-600 rounded-lg overflow-hidden flex items-center justify-center text-white font-bold">
@@ -134,6 +197,7 @@
                 <div class="w-8 h-8"></div>
             </header>
             <div class="p-6 lg:p-10 max-w-6xl mx-auto">
+                <!-- Page Dashboard -->
                 <section id="page-home" class="page space-y-6">
                     <div class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-[2rem] p-8 text-white shadow-xl">
                         <h2 class="text-2xl font-black mb-2">Selamat Datang</h2>
@@ -146,8 +210,26 @@
                         </div>
                     </div>
                 </section>
+
+                <!-- Page Database -->
                 <section id="page-admin" class="page hidden">
                     <div id="user-list" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+                </section>
+
+                <!-- Page Profile & QR -->
+                <section id="page-profile" class="page hidden">
+                    <div class="bg-white rounded-[2rem] border border-slate-100 p-8 shadow-sm flex flex-col items-center">
+                        <div id="user-qrcode" class="p-4 bg-white border-8 border-slate-50 rounded-2xl mb-6"></div>
+                        <h3 class="text-xl font-bold text-slate-900" id="profile-name">Nama Pegawai</h3>
+                        <p class="text-blue-600 font-mono text-sm mb-6" id="profile-id">ID: PSDA-XXXX-XXXX</p>
+                        
+                        <div class="w-full grid grid-cols-2 gap-4 text-left border-t border-slate-50 pt-6">
+                            <div><p class="text-[10px] text-slate-400 uppercase font-bold">Jabatan</p><p id="p-jabatan" class="text-sm font-bold">-</p></div>
+                            <div><p class="text-[10px] text-slate-400 uppercase font-bold">Wilayah</p><p id="p-wilayah" class="text-sm font-bold">-</p></div>
+                            <div><p class="text-[10px] text-slate-400 uppercase font-bold">Tipe</p><p id="p-tipe" class="text-sm font-bold">-</p></div>
+                            <div><p class="text-[10px] text-slate-400 uppercase font-bold">DI</p><p id="p-di" class="text-sm font-bold">-</p></div>
+                        </div>
+                    </div>
                 </section>
             </div>
         </main>
@@ -167,13 +249,17 @@
             appId: "1:98861981068:web:767f249c35a0dae4d2caa9"
         };
 
-        // Inisialisasi Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         const appId = 'upt-psda-smart';
         
         let selectedPhoto = null;
+        let currentUserData = null;
+
+        // Scanner Simulasi (Hanya untuk UI karena iFrame terbatas)
+        window.openScanner = () => document.getElementById('qr-scanner-overlay').style.display = 'flex';
+        window.closeScanner = () => document.getElementById('qr-scanner-overlay').style.display = 'none';
 
         // UI Helpers
         const showToast = (msg) => {
@@ -189,24 +275,51 @@
             setTimeout(() => s.style.display = 'none', 500);
         };
 
+        const generateUserQR = (id) => {
+            const container = document.getElementById('user-qrcode');
+            container.innerHTML = "";
+            new QRCode(container, {
+                text: id,
+                width: 180,
+                height: 180,
+                colorDark : "#1e293b",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        };
+
         const renderApp = (userData) => {
+            currentUserData = userData;
             document.getElementById('page-auth').classList.add('hidden');
             document.getElementById('app-main').classList.remove('hidden');
+            
+            // Sidebar info
             document.getElementById('side-user-name').innerText = userData.Nama_Lengkap;
             document.getElementById('welcome-msg').innerText = `ID Anda: ${userData.ID_User} | Wilayah: ${userData.Wilayah}`;
             
+            // Profil Info
+            document.getElementById('profile-name').innerText = userData.Nama_Lengkap;
+            document.getElementById('profile-id').innerText = `ID: ${userData.ID_User}`;
+            document.getElementById('p-jabatan').innerText = userData.Jabatan;
+            document.getElementById('p-wilayah').innerText = userData.Wilayah;
+            document.getElementById('p-tipe').innerText = userData.Tipe_Pegawai;
+            document.getElementById('p-di').innerText = userData.DI || '-';
+            
+            generateUserQR(userData.ID_User);
+
             if(userData.Foto_Profil) {
                 document.getElementById('side-avatar-img').src = userData.Foto_Profil;
                 document.getElementById('side-avatar-img').classList.remove('hidden');
                 document.getElementById('side-avatar-text').classList.add('hidden');
             } else {
                 document.getElementById('side-avatar-text').innerText = userData.Nama_Lengkap[0];
+                document.getElementById('side-avatar-text').classList.remove('hidden');
+                document.getElementById('side-avatar-img').classList.add('hidden');
             }
             fetchDatabase();
         };
 
         const fetchDatabase = () => {
-            // Path sesuai gambar console: artifacts/upt-psda-smart/public/data/all_users
             const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'all_users');
             onSnapshot(colRef, (snap) => {
                 const users = [];
@@ -220,23 +333,20 @@
                         </div>
                         <div class="overflow-hidden">
                             <h4 class="text-xs font-bold truncate">${u.Nama_Lengkap}</h4>
-                            <p class="text-[9px] text-slate-400 font-bold uppercase">${u.Jabatan} - ${u.Wilayah}</p>
+                            <p class="text-[9px] text-slate-400 font-bold uppercase">${u.Jabatan} (${u.Tipe_Pegawai})</p>
                         </div>
                     </div>
                 `).join('');
                 lucide.createIcons();
-            }, (err) => {
-                console.error("Firestore Listen Error:", err);
-                showToast("Gagal memuat database");
             });
         };
 
-        // Login Logic (DIPERBAIKI)
+        // Login Multi-Metode (ID, Nama, HP, Email)
         document.getElementById('btn-login').onclick = async () => {
-            const id = document.getElementById('login-id').value.trim();
+            const input = document.getElementById('login-id').value.trim().toLowerCase();
             const pass = document.getElementById('login-pass').value.trim();
             
-            if(!id || !pass) return showToast("Isi semua data!");
+            if(!input || !pass) return showToast("Isi semua data!");
 
             try {
                 const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'all_users');
@@ -244,45 +354,72 @@
                 let found = null;
                 
                 snap.forEach(doc => {
-                    const data = doc.data();
-                    if(data.ID_User === id && data.Password === pass) found = data;
+                    const d = doc.data();
+                    // Cek Multi Field
+                    const matchID = d.ID_User.toLowerCase() === input;
+                    const matchName = d.Nama_Lengkap.toLowerCase() === input;
+                    const matchEmail = (d.Email || "").toLowerCase() === input;
+                    const matchHP = (d.No_HP || "").toLowerCase() === input;
+
+                    if((matchID || matchName || matchEmail || matchHP) && d.Password === pass) {
+                        found = d;
+                    }
                 });
 
                 if(found) {
                     showToast("Login Berhasil!");
                     renderApp(found);
                 } else {
-                    showToast("ID atau Password salah!");
+                    showToast("ID / Pass tidak cocok!");
                 }
             } catch (e) {
-                console.error(e);
-                showToast("Error sistem login");
+                showToast("Terjadi kendala teknis");
             }
         };
 
-        // Register Logic
+        // Lupa Password
+        document.getElementById('btn-forgot-send').onclick = () => {
+            const input = document.getElementById('forgot-input').value;
+            if(!input) return showToast("Masukkan Email/HP!");
+            showToast("Verifikasi telah dikirim ke " + input);
+            setTimeout(() => {
+                document.getElementById('card-forgot').classList.remove('active');
+                document.getElementById('card-login').classList.add('active');
+            }, 2000);
+        };
+
+        // Register Logic (Field Mapping sesuai Sheet)
         document.getElementById('btn-reg').onclick = async () => {
             const name = document.getElementById('reg-name').value;
             const pass = document.getElementById('reg-pass').value;
-            if(!name || !pass) return showToast("Lengkapi form!");
+            const jabatan = document.getElementById('reg-jabatan').value;
+            const tipe = document.getElementById('reg-tipe').value;
+            const email = document.getElementById('reg-email').value;
+            const hp = document.getElementById('reg-hp').value;
+
+            if(!name || !pass || !jabatan || !tipe || !email) return showToast("Lengkapi form wajib!");
 
             const userId = auth.currentUser.uid;
             const payload = {
                 uid: userId,
                 ID_User: document.getElementById('reg-id-auto').value,
                 Nama_Lengkap: name,
-                Jabatan: document.getElementById('reg-jabatan').value,
+                DI: document.getElementById('reg-di').value,
+                Jabatan: jabatan,
+                Tipe_Pegawai: tipe,
                 Wilayah: document.getElementById('reg-wilayah').value,
+                Lokasi_Penempatan: document.getElementById('reg-penempatan').value,
+                No_HP: hp,
+                Email: email,
                 Password: pass,
                 Foto_Profil: selectedPhoto,
                 CreatedAt: new Date().toISOString()
             };
 
             try {
-                // Simpan ke Private dan Public (Path All_Users sesuai gambar Anda)
                 await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'profile', 'data'), payload);
                 await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'all_users', userId), payload);
-                showToast("Pendaftaran Berhasil!");
+                showToast("Registrasi Berhasil!");
                 renderApp(payload);
             } catch (e) {
                 showToast("Gagal mendaftar");
@@ -310,32 +447,45 @@
             reader.readAsDataURL(e.target.files[0]);
         };
 
-        // Navigation
+        // Switch Card UI
+        const switchAuthCard = (targetId) => {
+            document.querySelectorAll('.auth-card').forEach(c => c.classList.remove('active'));
+            document.getElementById(targetId).classList.add('active');
+        };
+
+        document.getElementById('to-register').onclick = () => switchAuthCard('card-register');
+        document.getElementById('to-login-reg').onclick = () => switchAuthCard('card-login');
+        document.getElementById('to-forgot').onclick = () => switchAuthCard('card-forgot');
+        document.getElementById('back-to-login').onclick = () => switchAuthCard('card-login');
+
+        // Navigation Menu
         document.getElementById('nav-home-btn').onclick = () => {
+            document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
             document.getElementById('page-home').classList.remove('hidden');
-            document.getElementById('page-admin').classList.add('hidden');
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('nav-home-btn').classList.add('active');
             document.getElementById('top-title').innerText = "Dashboard";
         };
         document.getElementById('nav-admin-btn').onclick = () => {
-            document.getElementById('page-home').classList.add('hidden');
+            document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
             document.getElementById('page-admin').classList.remove('hidden');
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('nav-admin-btn').classList.add('active');
             document.getElementById('top-title').innerText = "Database Pegawai";
         };
-
-        document.getElementById('to-register').onclick = () => {
-            document.getElementById('card-login').classList.remove('active');
-            document.getElementById('card-register').classList.add('active');
-        };
-        document.getElementById('to-login').onclick = () => {
-            document.getElementById('card-register').classList.remove('active');
-            document.getElementById('card-login').classList.add('active');
+        document.getElementById('nav-profile-btn').onclick = () => {
+            document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+            document.getElementById('page-profile').classList.remove('hidden');
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('nav-profile-btn').classList.add('active');
+            document.getElementById('top-title').innerText = "Profil & QR Card";
         };
 
         // Sidebar Control
         document.getElementById('open-sidebar').onclick = () => document.getElementById('sidebar').classList.add('open');
         document.getElementById('close-sidebar').onclick = () => document.getElementById('sidebar').classList.remove('open');
 
-        // Init Auth
+        // Auth Listener
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const snap = await getDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data'));
